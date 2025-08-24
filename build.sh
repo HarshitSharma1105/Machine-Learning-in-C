@@ -1,4 +1,5 @@
-#! /bin/bash
+#!/bin/bash
 
 
-gcc main.c -lm -o builds/main
+gcc gates.c -lm -o builds/gates
+gcc twice.c -lm -o builds/twice

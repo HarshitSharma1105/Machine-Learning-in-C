@@ -5,8 +5,17 @@
 
 typedef  float Sample[3];
 
+
+typedef struct{
+    int len,dimensions;
+    Sample* sample;
+} Dataset;
+
+
 typedef struct {
-    float w1,w2,b;
+    float b;
+    float* weights;
+    Dataset* dataset;
 } Perceptron;
 
 
@@ -35,9 +44,6 @@ Sample nor_data[]={
 
 
 
-Sample* sample_data= and_data;
-
-#define train_size 4
 
 
 
@@ -47,63 +53,111 @@ float sigmoid(float x)
 }
 
 
-float forward(Perceptron p,float x1,float x2)
+float forward(Perceptron *p,float *inputs)
 {
-    return sigmoid(p.w1*x1 + p.w2*x2 +p.b);
+    int dim=p->dataset->dimensions;
+    float res=p->b;
+    for(int j=0;j<dim;j++)
+    {
+        res+=inputs[j]*p->weights[j];
+    }
+    return sigmoid(res);
 }
 
-float cost(Perceptron p)
+float cost(Perceptron *p)
 {
     float result=0.0;
-    for(int i=0;i<train_size;i++)
+    int len=p->dataset->len;
+    int dim=p->dataset->dimensions;
+    for(int i=0;i<len;i++)
     {
-        float d=sample_data[i][2]-forward(p,sample_data[i][0],sample_data[i][1]);
+        float d=p->dataset->sample[i][dim]-forward(p,p->dataset->sample[i]);
         result+=d*d;
     }
-    return result/train_size;
+    return result/len;
 }
 
 
 
-Perceptron gradient(Perceptron p)
+void gradient_descent(Perceptron *p,float lr)
 {
     float eps=1e-2;
     float c=cost(p);
-    float dw1=(cost((Perceptron){p.w1+eps,p.w2,p.b})-c)/eps;
-    float dw2=(cost((Perceptron){p.w1,p.w2+eps,p.b})-c)/eps;
-    float db=(cost((Perceptron){p.w1,p.w2,p.b+eps})-c)/eps;
-    return (Perceptron){dw1,dw2,db};
+    int size=p->dataset->dimensions;
+    float* dw=malloc(sizeof(float)*size);
+    for(int i=0;i<size;i++)
+    {
+        float save=p->weights[i];
+        p->weights[i]+=eps;
+        dw[i]=(cost(p)-c)/eps;
+        p->weights[i]=save;
+    }
+    for(int i=0;i<size;i++)
+    {
+        p->weights[i]-=lr*dw[i];
+    }
+    float save=p->b;
+    p->b+=eps;
+    float db=(cost(p)-c)/eps;
+    p->b=save-lr*db;
+    free(dw);
 }
 
-Perceptron train(Perceptron p,int iterations,float lr)
+
+
+void print_model(Perceptron* p)
 {
-    printf("%f %f %f\n",p.w1,p.w2,p.b);
+    int size=p->dataset->dimensions;
+    for(int i=0;i<size;i++)
+    {
+        printf(" %f ",p->weights[i]);
+    }
+    printf(" %f\n",p->b);
+}
+
+void train(Perceptron* p,int iterations,float lr)
+{
+    
     for(int i=0;i<iterations;i++)
     {
-        Perceptron g=gradient(p);
-        p.w1-=(lr*g.w1);
-        p.w2-=(lr*g.w2);
-        p.b-=(lr*g.b);
+        gradient_descent(p,lr);
         printf("%f\n",cost(p));
     }
-    printf("%f %f %f\n",p.w1,p.w2,p.b);
-
-    return p;
 }
-
 
 float randfloat()
 {
     return (float)rand()/(float)RAND_MAX;
 }
 
+
+Perceptron* init_perceptron(Dataset* ds)
+{
+    Perceptron* p = malloc(sizeof(Perceptron));
+    int dim=ds->dimensions;
+    p->weights=malloc(sizeof(float)*dim);
+    for(int i=0;i<dim;i++)
+    {
+        p->weights[i]=randfloat();
+    }
+    p->b=randfloat();
+    p->dataset=ds;
+    return p;
+}
+
+
 int main()
 {   
     srand(time(0));
-    Perceptron p={randfloat(),randfloat(),randfloat()};
-    p=train(p,500*1000,0.01);
+    Dataset dataset={.len=4,.sample=or_data,.dimensions=2};
+    Perceptron* p=init_perceptron(&dataset);
+    float inputs[2];
+    train(p,500*1000,0.1);
     for(int i=0;i<2;i++){
-        for(int j=0;j<2;j++)
-            printf("%d %d %f\n",i,j,forward(p,i,j));
+        for(int j=0;j<2;j++){
+            inputs[0]=i;inputs[1]=j;
+            printf("%d %d %f\n",i,j,forward(p,inputs));
+        }
     }
+    print_model(p);
 }

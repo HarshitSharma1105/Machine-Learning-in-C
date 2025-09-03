@@ -3,7 +3,7 @@
 #include<stdlib.h>
 #include<time.h>
 
-typedef  float Sample[3];
+typedef  float Sample[2];
 
 
 typedef struct{
@@ -19,28 +19,37 @@ typedef struct {
 } Perceptron;
 
 
-Sample or_data[]={
-    {0,0,0},
-    {0,1,1},
-    {1,0,1},
-    {1,1,1}
+
+Sample train_data[]={
+    {0,2},
+    {1,4},
+    {2,6},
+    {3,8},
+    {4,10}
 };
 
-Sample and_data[]={
-    {0,0,0},
-    {0,1,0},
-    {1,0,0},
-    {1,1,1}
-};
+// Sample or_data[]={
+//     {0,0,0},
+//     {0,1,1},
+//     {1,0,1},
+//     {1,1,1}
+// };
+
+// Sample and_data[]={
+//     {0,0,0},
+//     {0,1,0},
+//     {1,0,0},
+//     {1,1,1}
+// };
 
 
 
-Sample nor_data[]={
-    {0,0,1},
-    {0,1,0},
-    {1,0,0},
-    {1,1,0}
-};
+// Sample nor_data[]={
+//     {0,0,1},
+//     {0,1,0},
+//     {1,0,0},
+//     {1,1,0}
+// };
 
 
 
@@ -61,7 +70,7 @@ float forward(Perceptron *p,float *inputs)
     {
         res+=inputs[j]*p->weights[j];
     }
-    return sigmoid(res);
+    return (res);
 }
 
 float cost(Perceptron *p)
@@ -81,25 +90,24 @@ float cost(Perceptron *p)
 
 void gradient_descent(Perceptron *p,float lr)
 {
-    float eps=1e-2;
+    float eps=1e-3;
     float c=cost(p);
     int size=p->dataset->dimensions;
     float* dw=malloc(sizeof(float)*size);
     for(int i=0;i<size;i++)
     {
-        float save=p->weights[i];
         p->weights[i]+=eps;
         dw[i]=(cost(p)-c)/eps;
-        p->weights[i]=save;
+        p->weights[i]-=eps;
     }
     for(int i=0;i<size;i++)
     {
         p->weights[i]-=lr*dw[i];
     }
-    float save=p->b;
     p->b+=eps;
     float db=(cost(p)-c)/eps;
-    p->b=save-lr*db;
+    p->b-=eps;
+    p->b=p->b-lr*db;
     free(dw);
 }
 
@@ -149,15 +157,21 @@ Perceptron* init_perceptron(Dataset* ds)
 int main()
 {   
     srand(time(0));
-    Dataset dataset={.len=4,.sample=or_data,.dimensions=2};
+    Dataset dataset={.len=sizeof(train_data)/sizeof(Sample),.sample=train_data,.dimensions=(sizeof(Sample)/sizeof(float))-1};
     Perceptron* p=init_perceptron(&dataset);
     float inputs[2];
-    train(p,500*1000,0.1);
-    for(int i=0;i<2;i++){
-        for(int j=0;j<2;j++){
-            inputs[0]=i;inputs[1]=j;
-            printf("%d %d %f\n",i,j,forward(p,inputs));
-        }
+    train(p,500*1000,0.001);
+    // for(int i=0;i<2;i++){
+    //     for(int j=0;j<2;j++){
+    //         inputs[0]=i;inputs[1]=j;
+    //         printf("%d %d %f\n",i,j,forward(p,inputs));
+    //     }
+    // }
+    float *f=malloc(sizeof(float));
+    for(int i=0;i<10;i++)
+    {
+        *f=i;
+        printf("%d %f\n",i,forward(p,f));
     }
     print_model(p);
 }

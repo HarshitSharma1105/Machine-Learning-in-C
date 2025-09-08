@@ -177,18 +177,6 @@ int main()
     Perceptron* p=init_perceptron(&dataset);
     float inputs[2];
     train(p,500*1000,0.001);
-    // // for(int i=0;i<2;i++){
-    // //     for(int j=0;j<2;j++){
-    // //         inputs[0]=i;inputs[1]=j;
-    // //         printf("%d %d %f\n",i,j,forward(p,inputs));
-    // //     }
-    // // }
-    // float *f=malloc(sizeof(float));
-    // for(int i=0;i<10;i++)
-    // {
-    //     *f=i;
-    //     printf("%d %f\n",i,forward(p,f));
-    // }
     predict(p);
     print_model(p);
 }

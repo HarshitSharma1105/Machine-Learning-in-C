@@ -21,14 +21,16 @@ typedef struct {
 
 
 Sample train_data[]={
-    {0,2},
-    {1,4},
-    {2,6},
-    {3,8},
-    {4,10}
+    {0,3},
+    {1,3},
+    {2,7},
+    {3,7},
+    {4,11},
+    {6,15},
+    {9,19}
 };
 
-// Sample or_data[]={
+// Sample train_data[]={
 //     {0,0,0},
 //     {0,1,1},
 //     {1,0,1},
@@ -62,13 +64,13 @@ float sigmoid(float x)
 }
 
 
-float forward(Perceptron *p,float *inputs)
+float forward(Perceptron *p,Sample sample)
 {
     int dim=p->dataset->dimensions;
     float res=p->b;
     for(int j=0;j<dim;j++)
     {
-        res+=inputs[j]*p->weights[j];
+        res+=sample[j]*p->weights[j];
     }
     return (res);
 }
@@ -90,7 +92,7 @@ float cost(Perceptron *p)
 
 void gradient_descent(Perceptron *p,float lr)
 {
-    float eps=1e-3;
+    float eps=1e-2;
     float c=cost(p);
     int size=p->dataset->dimensions;
     float* dw=malloc(sizeof(float)*size);
@@ -154,6 +156,20 @@ Perceptron* init_perceptron(Dataset* ds)
 }
 
 
+
+void predict(Perceptron* p)
+{
+    int len=p->dataset->len;
+    int dim=p->dataset->dimensions;
+    Sample* sample=p->dataset->sample;
+    for(int i=0;i<len;i++)
+    {
+        for(int j=0;j<dim;j++)printf("%f ",sample[i][j]);
+        printf("%f\n",forward(p,sample[i]));
+    }
+}
+
+
 int main()
 {   
     srand(time(0));
@@ -161,17 +177,18 @@ int main()
     Perceptron* p=init_perceptron(&dataset);
     float inputs[2];
     train(p,500*1000,0.001);
-    // for(int i=0;i<2;i++){
-    //     for(int j=0;j<2;j++){
-    //         inputs[0]=i;inputs[1]=j;
-    //         printf("%d %d %f\n",i,j,forward(p,inputs));
-    //     }
+    // // for(int i=0;i<2;i++){
+    // //     for(int j=0;j<2;j++){
+    // //         inputs[0]=i;inputs[1]=j;
+    // //         printf("%d %d %f\n",i,j,forward(p,inputs));
+    // //     }
+    // // }
+    // float *f=malloc(sizeof(float));
+    // for(int i=0;i<10;i++)
+    // {
+    //     *f=i;
+    //     printf("%d %f\n",i,forward(p,f));
     // }
-    float *f=malloc(sizeof(float));
-    for(int i=0;i<10;i++)
-    {
-        *f=i;
-        printf("%d %f\n",i,forward(p,f));
-    }
+    predict(p);
     print_model(p);
 }
